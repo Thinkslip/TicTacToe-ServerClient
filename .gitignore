@@ -1,0 +1,6 @@
+# Ignore compiled class files
+*.class
+
+# Ignore package metadata
+.DS_Store
+*.log
