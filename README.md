@@ -5,7 +5,7 @@ A multiplayer Tic-Tac-Toe game with client-server communication over TCP.
 ## How to Run
 1. Start the server:  
 java Server
-2. Start the client(s):
+2. Start the client(s):  
 java Client
 
 ## Features 
