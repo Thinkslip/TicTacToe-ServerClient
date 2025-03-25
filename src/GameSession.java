@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.lang.Runnable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 // Handles a single Tic-Tac-Toe game session between two players.
@@ -100,26 +102,31 @@ public class GameSession implements Runnable {
         System.out.println(winner.getSymbol() + " has won the game!");
         winner.incrementWinStreak();
         loser.resetWinStreak();
-    
-        // Notify players of the result
+
+        // Notify players of results
         winner.sendMessage("W" + (char) winner.getWinStreak());
         loser.sendMessage("L");
-    
+
         // Ask winner if they want to play again
         winner.sendMessage("Do you want to play again? (Y/N)");
-    
-        // Read winner's response
         String response = winner.readMessage();
+
         if (response != null && response.equalsIgnoreCase("Y")) {
-            waitingPlayers.offer(winner);
+            // WINNER GOES TO THE FRONT OF THE QUEUE
+            synchronized (waitingPlayers) {
+                List<PlayerHandler> tempQueue = new ArrayList<>(waitingPlayers);
+                tempQueue.add(0, winner); // Add winner to the front
+                waitingPlayers.clear();
+                waitingPlayers.addAll(tempQueue);
+            }
+            sendQueueUpdate(winner);
         }
 
-        // Requeue the loser after the winner's response
         if (!loser.isDisconnected()) {
             waitingPlayers.offer(loser);
-            loser.sendMessage("Q" + (char) Math.min(waitingPlayers.size(), 255) + "\n");
+            sendQueueUpdate(loser);
         }
-    
+
         running = false;
     }
     
@@ -148,7 +155,7 @@ public class GameSession implements Runnable {
 
     // Helper method to send a queue position update
     private void sendQueueUpdate(PlayerHandler player) {
-        int position = Math.min(waitingPlayers.size(), 255); // Cap at 255
+        int position = Math.min(waitingPlayers.size(), 255);
         player.sendMessage("Q" + (char) position);
     }
 
